@@ -1,14 +1,15 @@
 import re
 import pandas as pd
 import io
+from multiprocessing import Pool
 import time
 
-# start = time.perf_counter()
+start = time.perf_counter()
 
 df_list = []
-for i in range(1, 17):
-    att = f'ArkadiusTradeToolsSalesData{i:02d}.lua'
+att_list = [f'ArkadiusTradeToolsSalesData{i:02d}.lua' for i in range(1,17)]
 
+def clean_data(att):
     with open(att, 'rb') as file:
         dirty_data = file.readlines()
 
@@ -34,8 +35,13 @@ for i in range(1, 17):
 
     # buyer_name, guild_name, internal, itemlink, price, quantity, seller_name, taxes, timestamp, index(entry)
     df = pd.read_csv(io.StringIO(csv_data), index_col=9)
-    df_list.append(df)
 
-att_df = pd.concat(df_list)
-# end = time.perf_counter()
-# print(end-start)
+    return df
+
+def main():
+    result = Pool().map(clean_data, att_list)
+
+    att_df= pd.concat(result)
+
+if __name__ == '__main__':
+    main()
