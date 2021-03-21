@@ -1,12 +1,11 @@
 import os
-from discord import guild
 import pandas as pd
 from dotenv import load_dotenv
 from discord.ext.commands import Bot
 from datetime import datetime, timezone
 
-
 guilds = ['Rolling Coins', 'Shining Coins', 'Flipping Coins']
+df = pd.read_csv('att_data.csv', index_col=9)
 
 # creating custom trade week intervals
 week_intervals = pd.interval_range(start=pd.Timestamp('2021-01-01T14', tz='utc'), periods=208, freq='W-TUE')
@@ -31,12 +30,17 @@ for interval in weeks:
         # Week index
         wi = weeks.index(interval)
 
-df = pd.read_csv('test_file.csv', index_col=9)
 # getting current trade week sales
 def current_sales(seller, interval=[weeks[wi][0], weeks[wi][1]]):
 
     if '\'' in seller:
         seller = '\\\''.join(seller.split('\''))
+        name = df[df['seller_name'].str.lower() == seller.lower()]['seller_name'].unique()[0]
+    elif r'\xc3' in str(seller.encode('utf-8')):
+        name = seller
+        seller = str(seller.encode('utf-8'))[2:-1]
+    else:
+        name = df[df['seller_name'].str.lower() == seller.lower()]['seller_name'].unique()[0]
 
     guild_sales = {}
     for g in guilds:
@@ -44,7 +48,6 @@ def current_sales(seller, interval=[weeks[wi][0], weeks[wi][1]]):
         guild_sales[g] = df[ (df['seller_name'].str.lower() == seller.lower()) & (df['timestamp'].between(interval[0],interval[1])) & 
                              (df['guild_name'] == g)]['price'].sum()
 
-    name = df[df['seller_name'].str.lower() == seller.lower()]['seller_name'].unique()[0]
     sales = df[(df['seller_name'].str.lower() == seller.lower()) & (df['timestamp'].between(interval[0],interval[1]))]['price'].sum()
 
     if '\\' in name:
@@ -57,6 +60,12 @@ def previous_sales(seller, interval=[weeks[wi-1][0], weeks[wi-1][1]]):
 
     if '\'' in seller:
         seller = '\\\''.join(seller.split('\''))
+        name = df[df['seller_name'].str.lower() == seller.lower()]['seller_name'].unique()[0]
+    elif r'\xc3' in str(seller.encode('utf-8')):
+        name = seller
+        seller = str(seller.encode('utf-8'))[2:-1]
+    else:
+        name = df[df['seller_name'].str.lower() == seller.lower()]['seller_name'].unique()[0]
 
     guild_sales = {}
     for g in guilds:
@@ -64,7 +73,6 @@ def previous_sales(seller, interval=[weeks[wi-1][0], weeks[wi-1][1]]):
         guild_sales[g] = df[ (df['seller_name'].str.lower() == seller.lower()) & (df['timestamp'].between(interval[0],interval[1])) & 
                              (df['guild_name'] == g)]['price'].sum()
 
-    name = df[df['seller_name'].str.lower() == seller.lower()]['seller_name'].unique()[0]
     sales = df[(df['seller_name'].str.lower() == seller.lower()) & (df['timestamp'].between(interval[0],interval[1]))]['price'].sum()
 
     if '\\' in name:
@@ -85,6 +93,7 @@ def add_spaces(num):
 
     return ''.join(new_num)
 
+
 # Setting up the bot
 bot = Bot(command_prefix='!')
 
@@ -99,12 +108,16 @@ async def thisweek(cxt):
     sales = data[1]
     guild_sales = data[2]       
 
+    file_mod_time = datetime.fromtimestamp(os.path.getmtime('att_data.csv'), 
+                    timezone.utc).strftime("%H:%M:%S %d-%m-%Y ")
+
     await chl.send(f"**{seller}** current trade week sales:\n"
                    f"```\n"
                    f"Rolling Coins: {add_spaces(guild_sales['Rolling Coins'])}\n"
                    f"Shining Coins: {add_spaces(guild_sales['Shining Coins'])}\n"
                    f"Flipping Coins: {add_spaces(guild_sales['Flipping Coins'])}\n"
-                   f"All Sales: {add_spaces(sales)}\n"
+                   f"All Sales: {add_spaces(sales)}\n\n"
+                   f"Last updated(UTC): {file_mod_time}\n"
                     "```")
 
 @bot.command()
@@ -116,14 +129,18 @@ async def lastweek(cxt):
     data = previous_sales(msg_input)
     seller = data[0]
     sales = data[1]
-    guild_sales = data[2]       
+    guild_sales = data[2]
+
+    file_mod_time = datetime.fromtimestamp(os.path.getmtime('att_data.csv'), 
+                    timezone.utc).strftime("%H:%M:%S %d-%m-%Y ")
 
     await chl.send(f"**{seller}** last trade week sales:\n"
                    f"```\n"
                    f"Rolling Coins: {add_spaces(guild_sales['Rolling Coins'])}\n"
                    f"Shining Coins: {add_spaces(guild_sales['Shining Coins'])}\n"
                    f"Flipping Coins: {add_spaces(guild_sales['Flipping Coins'])}\n"
-                   f"All Sales: {add_spaces(sales)}\n"
+                   f"All Sales: {add_spaces(sales)}\n\n"
+                   f"Last updated(UTC): {file_mod_time}\n"
                     "```")
 
 if __name__ == '__main__':
