@@ -3,6 +3,7 @@ import re
 import pandas as pd
 import requests_html as req
 from dotenv import load_dotenv
+import discord
 from discord.ext.commands import Bot
 from datetime import datetime, timezone, timedelta
 
@@ -94,15 +95,18 @@ async def thisweek(cxt):
 
     file_mod_time = datetime.fromtimestamp(os.path.getmtime('att_data.csv'), 
                     timezone.utc).strftime("%H:%M:%S %d-%m-%Y ")
+    
+    bot_img = bot.user.avatar_url
 
-    await chl.send(f"**{seller}** current trade week sales:\n"
-                   f"```\n"
-                   f"Rolling Coins: {add_spaces(guild_sales['Rolling Coins'])}\n"
-                   f"Shining Coins: {add_spaces(guild_sales['Shining Coins'])}\n"
-                   f"Flipping Coins: {add_spaces(guild_sales['Flipping Coins'])}\n"
-                   f"All Sales: {add_spaces(sales)}\n\n"
-                   f"Last updated(UTC): {file_mod_time}\n"
-                    "```")
+    embed = discord.Embed(title=f"{seller} current trade week sales", colour=0xFFD700)
+    embed.add_field(name='Rolling Coins', value=f"{add_spaces(guild_sales['Rolling Coins'])}", inline=False)
+    embed.add_field(name='Shining Coins', value=f"{add_spaces(guild_sales['Shining Coins'])}", inline=False)
+    embed.add_field(name='Flipping Coins', value=f"{add_spaces(guild_sales['Flipping Coins'])}", inline=False)
+    embed.add_field(name='All Sales', value=f"{add_spaces(sales)}", inline=False)
+    embed.set_footer(text=f"Last updated(UTC): {file_mod_time}")
+    embed.set_thumbnail(url=bot_img)
+
+    await chl.send(embed=embed)
 
 @bot.command()
 async def lastweek(cxt):
@@ -122,14 +126,17 @@ async def lastweek(cxt):
     file_mod_time = datetime.fromtimestamp(os.path.getmtime('att_data.csv'), 
                     timezone.utc).strftime("%H:%M:%S %d-%m-%Y ")
 
-    await chl.send(f"**{seller}** last trade week sales:\n"
-                   f"```\n"
-                   f"Rolling Coins: {add_spaces(guild_sales['Rolling Coins'])}\n"
-                   f"Shining Coins: {add_spaces(guild_sales['Shining Coins'])}\n"
-                   f"Flipping Coins: {add_spaces(guild_sales['Flipping Coins'])}\n"
-                   f"All Sales: {add_spaces(sales)}\n\n"
-                   f"Last updated(UTC): {file_mod_time}\n"
-                    "```")
+    bot_img = bot.user.avatar_url
+
+    embed = discord.Embed(title=f"{seller} previous trade week sales", colour=0xFFD700)
+    embed.add_field(name='Rolling Coins', value=f"{add_spaces(guild_sales['Rolling Coins'])}", inline=False)
+    embed.add_field(name='Shining Coins', value=f"{add_spaces(guild_sales['Shining Coins'])}", inline=False)
+    embed.add_field(name='Flipping Coins', value=f"{add_spaces(guild_sales['Flipping Coins'])}", inline=False)
+    embed.add_field(name='All Sales', value=f"{add_spaces(sales)}", inline=False)
+    embed.set_footer(text=f"Last updated(UTC): {file_mod_time}")
+    embed.set_thumbnail(url=bot_img)
+
+    await chl.send(embed=embed)
 
 # get sales for n previous days
 @bot.command()
@@ -151,14 +158,17 @@ async def days(cxt):
     file_mod_time = datetime.fromtimestamp(os.path.getmtime('att_data.csv'), 
                     timezone.utc).strftime("%H:%M:%S %d-%m-%Y ")
 
-    await chl.send(f"**{seller}** last {d} days sales:\n"
-                   f"```\n"
-                   f"Rolling Coins: {add_spaces(guild_sales['Rolling Coins'])}\n"
-                   f"Shining Coins: {add_spaces(guild_sales['Shining Coins'])}\n"
-                   f"Flipping Coins: {add_spaces(guild_sales['Flipping Coins'])}\n"
-                   f"All Sales: {add_spaces(sales)}\n\n"
-                   f"Last updated(UTC): {file_mod_time}\n"
-                    "```")
+    bot_img = bot.user.avatar_url
+
+    embed = discord.Embed(title=f"{seller} last {d} days sales", colour=0xFFD700)
+    embed.add_field(name='Rolling Coins', value=f"{add_spaces(guild_sales['Rolling Coins'])}", inline=False)
+    embed.add_field(name='Shining Coins', value=f"{add_spaces(guild_sales['Shining Coins'])}", inline=False)
+    embed.add_field(name='Flipping Coins', value=f"{add_spaces(guild_sales['Flipping Coins'])}", inline=False)
+    embed.add_field(name='All Sales', value=f"{add_spaces(sales)}", inline=False)
+    embed.set_footer(text=f"Last updated(UTC): {file_mod_time}")
+    embed.set_thumbnail(url=bot_img)
+
+    await chl.send(embed=embed)
 
 # get most sold item
 @bot.command()
@@ -218,7 +228,6 @@ async def admirer(cxt):
 
     await chl.send(f"`Most frequent buyer(30 days) is {buyer_name} with {purchases} purchases.`")
 
-
 @bot.command()
 async def guildadmirer(cxt):
 
@@ -233,7 +242,7 @@ async def guildadmirer(cxt):
     purchases = buyer_row.iloc[0]
 
     await chl.send(f"`Most frequent guildie buyer(30 days) is {buyer_name} with {purchases} purchases.`")
-    
+
 
 if __name__ == '__main__':
 
