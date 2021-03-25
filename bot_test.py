@@ -4,8 +4,6 @@ import discord
 import pandas as pd
 import requests_html as req
 from dotenv import load_dotenv
-import datetime
-
 from discord.ext.commands import Bot
 from datetime import datetime, timezone, timedelta
 
@@ -77,7 +75,9 @@ def add_spaces(num):
 
 
 # Setting up the bot
-bot = Bot(command_prefix='!')
+intents = discord.Intents.default()
+intents.members = True
+bot = Bot(command_prefix='!', intents=intents)
 
 @bot.command()
 async def thisweek(cxt):
@@ -219,11 +219,13 @@ async def top5(cxt):
     chl = cxt.channel
     msg = cxt.message.content
     nl = '\n' # newline to be used in f-string
+    ws = '\u200b' # whitespace
+    wi = get_week() # week index
+    i = [ weeks[wi][0], weeks[wi][1]] # interval
 
-    if msg.split()[1] == 'sellers':
+
+    if msg.split()[1] == 'traders':
         embed = discord.Embed(title='Top5 highest sellers this trade week', colour=0xFFD700)
-        wi = get_week() # week index
-        i = [ weeks[wi][0], weeks[wi][1]] # interval
         
         for g in guilds:
             t5 = df[(df['guild_name']==g) & 
@@ -231,7 +233,7 @@ async def top5(cxt):
                     ].groupby('seller_name')['price'].sum()
             t5.sort_values(ascending=False, inplace=True)
 
-            t5_pairs = [f"{t5.index[n]}: {add_spaces(t5.iloc[n])}" for n in range(5)]
+            t5_pairs = [f"{t5.index[n]}: {ws} {ws} {ws} {ws} {add_spaces(t5.iloc[n])}" for n in range(5)]
 
             embed.add_field(name=f'{g}', value=f"{nl.join(t5_pairs)}",
                                                inline=False)
@@ -245,9 +247,7 @@ async def top5(cxt):
         embed.add_field(name='All Guilds', value=f"{nl.join(ags_pairs)}",
                                                  inline=False)
     elif msg.split()[1] == 'buyers':
-        embed = discord.Embed(title='Top5 biggest internal buyers this trade week', colour=0xFFD700)
-        wi = get_week() # week index
-        i = [ weeks[wi][0], weeks[wi][1]] # interval
+        embed = discord.Embed(title='Top5 biggest internal purchasers this trade week', colour=0xFFD700)
 
         for g in guilds:
             t5 = df[(df['guild_name']==g) & 
@@ -256,7 +256,7 @@ async def top5(cxt):
                     ].groupby('buyer_name')['price'].sum()
             t5.sort_values(ascending=False, inplace=True)
 
-            t5_pairs = [f"{t5.index[n]}: {add_spaces(t5.iloc[n])}" for n in range(5)]
+            t5_pairs = [f"{t5.index[n]}: {ws} {ws} {ws} {ws} {add_spaces(t5.iloc[n])}" for n in range(5)]
             
             embed.add_field(name=f'{g}', value=f"{nl.join(t5_pairs)}",
                                                inline=False)
@@ -271,7 +271,7 @@ async def top5(cxt):
         embed.add_field(name='All Guilds', value=f"{nl.join(agb_pairs)}",
                                                  inline=False)
     else:
-        embed = discord.Embed(title=f'No option **{msg.split()[1]}**, please choose **sellers** or **buyers**')
+        embed = discord.Embed(title=f'No option **{msg.split()[1]}**, please choose **traders** or **buyers**')
 
     await chl.send(embed=embed)
 
@@ -360,22 +360,6 @@ async def guildadmirer(cxt):
     purchases = buyer_row.iloc[0]
 
     await chl.send(f"`Most frequent guildie buyer(30 days) is {buyer_name} with {purchases} purchases.`")
-
-@bot.command()
-async def get_info(cxt):
-    chl = cxt.channel
-    member = cxt.message.author
-
-    joined = datetime.strptime(str(member.joined_at), '%Y-%m-%d %H:%M:%S.%f')
-    registered = datetime.strptime(str(member.created_at), '%Y-%m-%d %H:%M:%S.%f')
-
-    embed = discord.Embed(title=f"User info", description=f'{member.mention}', colour=0xFFD700)
-    embed.add_field(name="Joined", value=f"{joined.strftime('%a, %b %d, %Y, %I:%M %p')}")
-    embed.add_field(name="Registered", value=f"{registered.strftime('%a, %b %d, %Y, %I:%M %p')}")
-    embed.add_field(name="Roles", value=f"{''.join([x.name for x in member.roles])}", inline=False)
-    embed.set_author(name=member, icon_url=member.avatar_url)
-
-    await chl.send(embed=embed)
 
 
 if __name__ == '__main__':
