@@ -218,31 +218,31 @@ async def mostvaluable(cxt):
 async def top5(cxt):
     chl = cxt.channel
     msg = cxt.message.content
+    nl = '\n' # newline to be used in f-string
 
     if msg.split()[1] == 'sellers':
         embed = discord.Embed(title='Top5 highest sellers this trade week', colour=0xFFD700)
         wi = get_week() # week index
         i = [ weeks[wi][0], weeks[wi][1]] # interval
-
+        
         for g in guilds:
             t5 = df[(df['guild_name']==g) & 
                     (df['timestamp'].between(i[0], i[1]))
                     ].groupby('seller_name')['price'].sum()
             t5.sort_values(ascending=False, inplace=True)
-            embed.add_field(name=f'{g}', value=f'{t5.index[0]}: {add_spaces(t5.iloc[0])}\n'
-                                               f'{t5.index[1]}: {add_spaces(t5.iloc[1])}\n'
-                                               f'{t5.index[2]}: {add_spaces(t5.iloc[2])}\n'
-                                               f'{t5.index[3]}: {add_spaces(t5.iloc[3])}\n'
-                                               f'{t5.index[4]}: {add_spaces(t5.iloc[4])}\n',
+
+            t5_pairs = [f"{t5.index[n]}: {add_spaces(t5.iloc[n])}" for n in range(5)]
+
+            embed.add_field(name=f'{g}', value=f"{nl.join(t5_pairs)}",
                                                inline=False)
+
         # all guild sales
         ags = df[df['timestamp'].between(i[0], i[1])].groupby('seller_name')['price'].sum()
         ags.sort_values(ascending=False, inplace=True)
-        embed.add_field(name='All Guilds', value=f'{ags.index[0]}: {add_spaces(ags.iloc[0])}\n'
-                                                 f'{ags.index[1]}: {add_spaces(ags.iloc[1])}\n'
-                                                 f'{ags.index[2]}: {add_spaces(ags.iloc[2])}\n'
-                                                 f'{ags.index[3]}: {add_spaces(ags.iloc[3])}\n'
-                                                 f'{ags.index[4]}: {add_spaces(ags.iloc[4])}\n',
+
+        ags_pairs = [f'{ags.index[n]}: {add_spaces(ags.iloc[n])}' for n in range(5)]
+
+        embed.add_field(name='All Guilds', value=f"{nl.join(ags_pairs)}",
                                                  inline=False)
     elif msg.split()[1] == 'buyers':
         embed = discord.Embed(title='Top5 biggest internal buyers this trade week', colour=0xFFD700)
@@ -255,26 +255,79 @@ async def top5(cxt):
                     (df['internal']==1)
                     ].groupby('buyer_name')['price'].sum()
             t5.sort_values(ascending=False, inplace=True)
-            embed.add_field(name=f'{g}', value=f'{t5.index[0]}: {add_spaces(t5.iloc[0])}\n'
-                                               f'{t5.index[1]}: {add_spaces(t5.iloc[1])}\n'
-                                               f'{t5.index[2]}: {add_spaces(t5.iloc[2])}\n'
-                                               f'{t5.index[3]}: {add_spaces(t5.iloc[3])}\n'
-                                               f'{t5.index[4]}: {add_spaces(t5.iloc[4])}\n',
+
+            t5_pairs = [f"{t5.index[n]}: {add_spaces(t5.iloc[n])}" for n in range(5)]
+            
+            embed.add_field(name=f'{g}', value=f"{nl.join(t5_pairs)}",
                                                inline=False)
 
         # all guild buys
         agb = df[(df['timestamp'].between(i[0], i[1])) &
                  (df['internal']==1)].groupby('buyer_name')['price'].sum()
         agb.sort_values(ascending=False, inplace=True)
-        embed.add_field(name='All Guilds', value=f'{agb.index[0]}: {add_spaces(agb.iloc[0])}\n'
-                                                 f'{agb.index[1]}: {add_spaces(agb.iloc[1])}\n'
-                                                 f'{agb.index[2]}: {add_spaces(agb.iloc[2])}\n'
-                                                 f'{agb.index[3]}: {add_spaces(agb.iloc[3])}\n'
-                                                 f'{agb.index[4]}: {add_spaces(agb.iloc[4])}\n',
+
+        agb_pairs = [f'{agb.index[n]}: {add_spaces(agb.iloc[n])}' for n in range(5)]
+
+        embed.add_field(name='All Guilds', value=f"{nl.join(agb_pairs)}",
                                                  inline=False)
     else:
         embed = discord.Embed(title=f'No option **{msg.split()[1]}**, please choose **sellers** or **buyers**')
 
+    await chl.send(embed=embed)
+
+@bot.command()
+async def summary(cxt):
+    chl = cxt.channel
+    nl = '\n' # newline to be used in f-string
+    wi = get_week()
+    i = [ weeks[wi-1][0], weeks[wi-1][1]] # interval
+    ws = '\u200b' # whitespace
+
+    embed = discord.Embed(title=f"Trading summary: Week {wi+1}", colour=0xFFD700)
+    
+    for g in guilds:
+        # ts - top sellers
+        ts = df[(df['guild_name']==g) & 
+                (df['timestamp'].between(i[0], i[1]))
+                ].groupby('seller_name')['price'].sum()
+        ts.sort_values(ascending=False, inplace=True)
+        # tb - top buyers
+        tb = df[(df['guild_name']==g) & 
+                    (df['timestamp'].between(i[0], i[1])) &
+                    (df['internal']==1)
+                    ].groupby('buyer_name')['price'].sum()
+        tb.sort_values(ascending=False, inplace=True)
+
+        tb_pairs = [f"{tb.index[n]}: {ws} {ws} {ws} {ws} {add_spaces(tb.iloc[n])}" for n in range(10)]
+        ts_pairs = [f"{ts.index[n]}: {ws} {ws} {ws} {ws} {add_spaces(ts.iloc[n])}" for n in range(10)]
+
+
+        embed.add_field(name=f'{g}\n', value=f"Sales;\n\n"
+                                             f"{nl.join(ts_pairs)}\n{ws}")
+        embed.add_field(name=f'{ws}\n', value=f"Internal purchases;\n\n"
+                                              f"{nl.join(tb_pairs)}\n{ws}")
+        embed.add_field(name=f'{ws}', value=f'{ws}')
+
+    # all guild sales
+    ags = df[df['timestamp'].between(i[0], i[1])].groupby('seller_name')['price'].sum()
+    ags.sort_values(ascending=False, inplace=True)
+
+    ags_pairs = [f'{ags.index[n]}: {ws} {ws} {ws} {ws} {add_spaces(ags.iloc[n])}' for n in range(10)]
+
+    embed.add_field(name='All Guilds\n', value="Sales;\n\n"
+                                               f"{nl.join(ags_pairs)}\n{ws}")
+
+    # all guild buys
+    agb = df[(df['timestamp'].between(i[0], i[1])) &
+             (df['internal']==1)].groupby('buyer_name')['price'].sum()
+    agb.sort_values(ascending=False, inplace=True)
+
+    agb_pairs = [f'{agb.index[n]}: {ws} {ws} {ws} {ws} {add_spaces(agb.iloc[n])}' for n in range(10)]
+
+    embed.add_field(name=f'{ws}\n', value="Internal purchases;\n\n"
+                                          f"{nl.join(agb_pairs)}")
+    embed.add_field(name=f'{ws}', value=f'{ws}')
+    
     await chl.send(embed=embed)
 
 # most frequent buyers
@@ -317,8 +370,8 @@ async def get_info(cxt):
     registered = datetime.strptime(str(member.created_at), '%Y-%m-%d %H:%M:%S.%f')
 
     embed = discord.Embed(title=f"User info", description=f'{member.mention}', colour=0xFFD700)
-    embed.add_field(name="Joined", value=f"{joined.strftime('%a, %b %d, %Y, %I %p')}")
-    embed.add_field(name="Registered", value=f"{registered.strftime('%a, %b %d, %Y, %I %p')}")
+    embed.add_field(name="Joined", value=f"{joined.strftime('%a, %b %d, %Y, %I:%M %p')}")
+    embed.add_field(name="Registered", value=f"{registered.strftime('%a, %b %d, %Y, %I:%M %p')}")
     embed.add_field(name="Roles", value=f"{''.join([x.name for x in member.roles])}", inline=False)
     embed.set_author(name=member, icon_url=member.avatar_url)
 
