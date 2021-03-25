@@ -1,9 +1,11 @@
 import os
 import re
+import discord
 import pandas as pd
 import requests_html as req
 from dotenv import load_dotenv
-import discord
+import datetime
+
 from discord.ext.commands import Bot
 from datetime import datetime, timezone, timedelta
 
@@ -212,6 +214,69 @@ async def mostvaluable(cxt):
                    f"\n```Sold for {add_spaces(mv_row['price'])} by {mv_row['seller_name']}"
                    f"\nLast updated(UTC): {file_mod_time}```")
 
+@bot.command()
+async def top5(cxt):
+    chl = cxt.channel
+    msg = cxt.message.content
+
+    if msg.split()[1] == 'sellers':
+        embed = discord.Embed(title='Top5 highest sellers this trade week', colour=0xFFD700)
+        wi = get_week() # week index
+        i = [ weeks[wi][0], weeks[wi][1]] # interval
+
+        for g in guilds:
+            t5 = df[(df['guild_name']==g) & 
+                    (df['timestamp'].between(i[0], i[1]))
+                    ].groupby('seller_name')['price'].sum()
+            t5.sort_values(ascending=False, inplace=True)
+            embed.add_field(name=f'{g}', value=f'{t5.index[0]}: {add_spaces(t5.iloc[0])}\n'
+                                               f'{t5.index[1]}: {add_spaces(t5.iloc[1])}\n'
+                                               f'{t5.index[2]}: {add_spaces(t5.iloc[2])}\n'
+                                               f'{t5.index[3]}: {add_spaces(t5.iloc[3])}\n'
+                                               f'{t5.index[4]}: {add_spaces(t5.iloc[4])}\n',
+                                               inline=False)
+        # all guild sales
+        ags = df[df['timestamp'].between(i[0], i[1])].groupby('seller_name')['price'].sum()
+        ags.sort_values(ascending=False, inplace=True)
+        embed.add_field(name='All Guilds', value=f'{ags.index[0]}: {add_spaces(ags.iloc[0])}\n'
+                                                 f'{ags.index[1]}: {add_spaces(ags.iloc[1])}\n'
+                                                 f'{ags.index[2]}: {add_spaces(ags.iloc[2])}\n'
+                                                 f'{ags.index[3]}: {add_spaces(ags.iloc[3])}\n'
+                                                 f'{ags.index[4]}: {add_spaces(ags.iloc[4])}\n',
+                                                 inline=False)
+    elif msg.split()[1] == 'buyers':
+        embed = discord.Embed(title='Top5 biggest internal buyers this trade week', colour=0xFFD700)
+        wi = get_week() # week index
+        i = [ weeks[wi][0], weeks[wi][1]] # interval
+
+        for g in guilds:
+            t5 = df[(df['guild_name']==g) & 
+                    (df['timestamp'].between(i[0], i[1])) &
+                    (df['internal']==1)
+                    ].groupby('buyer_name')['price'].sum()
+            t5.sort_values(ascending=False, inplace=True)
+            embed.add_field(name=f'{g}', value=f'{t5.index[0]}: {add_spaces(t5.iloc[0])}\n'
+                                               f'{t5.index[1]}: {add_spaces(t5.iloc[1])}\n'
+                                               f'{t5.index[2]}: {add_spaces(t5.iloc[2])}\n'
+                                               f'{t5.index[3]}: {add_spaces(t5.iloc[3])}\n'
+                                               f'{t5.index[4]}: {add_spaces(t5.iloc[4])}\n',
+                                               inline=False)
+
+        # all guild buys
+        agb = df[(df['timestamp'].between(i[0], i[1])) &
+                 (df['internal']==1)].groupby('buyer_name')['price'].sum()
+        agb.sort_values(ascending=False, inplace=True)
+        embed.add_field(name='All Guilds', value=f'{agb.index[0]}: {add_spaces(agb.iloc[0])}\n'
+                                                 f'{agb.index[1]}: {add_spaces(agb.iloc[1])}\n'
+                                                 f'{agb.index[2]}: {add_spaces(agb.iloc[2])}\n'
+                                                 f'{agb.index[3]}: {add_spaces(agb.iloc[3])}\n'
+                                                 f'{agb.index[4]}: {add_spaces(agb.iloc[4])}\n',
+                                                 inline=False)
+    else:
+        embed = discord.Embed(title=f'No option **{msg.split()[1]}**, please choose **sellers** or **buyers**')
+
+    await chl.send(embed=embed)
+
 # most frequent buyers
 @bot.command()
 async def admirer(cxt):
@@ -242,6 +307,22 @@ async def guildadmirer(cxt):
     purchases = buyer_row.iloc[0]
 
     await chl.send(f"`Most frequent guildie buyer(30 days) is {buyer_name} with {purchases} purchases.`")
+
+@bot.command()
+async def get_info(cxt):
+    chl = cxt.channel
+    member = cxt.message.author
+
+    joined = datetime.strptime(str(member.joined_at), '%Y-%m-%d %H:%M:%S.%f')
+    registered = datetime.strptime(str(member.created_at), '%Y-%m-%d %H:%M:%S.%f')
+
+    embed = discord.Embed(title=f"User info", description=f'{member.mention}', colour=0xFFD700)
+    embed.add_field(name="Joined", value=f"{joined.strftime('%a, %b %d, %Y, %I %p')}")
+    embed.add_field(name="Registered", value=f"{registered.strftime('%a, %b %d, %Y, %I %p')}")
+    embed.add_field(name="Roles", value=f"{''.join([x.name for x in member.roles])}", inline=False)
+    embed.set_author(name=member, icon_url=member.avatar_url)
+
+    await chl.send(embed=embed)
 
 
 if __name__ == '__main__':
