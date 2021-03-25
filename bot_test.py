@@ -242,7 +242,7 @@ async def top5(cxt):
         ags = df[df['timestamp'].between(i[0], i[1])].groupby('seller_name')['price'].sum()
         ags.sort_values(ascending=False, inplace=True)
 
-        ags_pairs = [f'{ags.index[n]}: {add_spaces(ags.iloc[n])}' for n in range(5)]
+        ags_pairs = [f'{ags.index[n]}: {ws} {ws} {ws} {ws} {add_spaces(ags.iloc[n])}' for n in range(5)]
 
         embed.add_field(name='All Guilds', value=f"{nl.join(ags_pairs)}",
                                                  inline=False)
@@ -266,7 +266,7 @@ async def top5(cxt):
                  (df['internal']==1)].groupby('buyer_name')['price'].sum()
         agb.sort_values(ascending=False, inplace=True)
 
-        agb_pairs = [f'{agb.index[n]}: {add_spaces(agb.iloc[n])}' for n in range(5)]
+        agb_pairs = [f'{agb.index[n]}: {ws} {ws} {ws} {ws} {add_spaces(agb.iloc[n])}' for n in range(5)]
 
         embed.add_field(name='All Guilds', value=f"{nl.join(agb_pairs)}",
                                                  inline=False)
