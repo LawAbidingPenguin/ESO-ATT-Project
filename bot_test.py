@@ -361,6 +361,13 @@ async def guildadmirer(cxt):
 
     await chl.send(f"`Most frequent guildie buyer(30 days) is {buyer_name} with {purchases} purchases.`")
 
+@bot.event
+async def on_command_error(cxt, error):
+    msg_input = cxt.message.content.split()[1]
+
+    if isinstance(error, discord.ext.commands.CommandInvokeError):
+        await cxt.send(f'`No info found for {msg_input}...`')
+    #TODO add code to write to an error logging file
 
 if __name__ == '__main__':
 
