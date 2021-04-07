@@ -401,3 +401,4 @@ if __name__ == '__main__':
 
     load_dotenv('.env')
     bot.run(os.getenv('DISCORD_TOKEN'))
+    #TODO testing git
