@@ -387,6 +387,10 @@ async def guildadmirer(ctx):
 
     await ctx.send(f"`Most frequent guildie buyer(30 days) is {buyer_name} with {purchases} purchases.`")
 
+@bot.command()
+async def roast(ctx):
+    pass
+    #TODO create a roast command
 
 @bot.event
 async def on_command_error(ctx, error):
