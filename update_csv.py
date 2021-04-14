@@ -1,6 +1,10 @@
+#!/usr/bin/env python3.6
+
+import multiprocessing
 import re
-from os.path import getmtime, isfile
+import os
 from multiprocessing import Pool
+
 
 guilds = ['Rolling Coins', 'Flipping Coins', 'Shining Coins']
 
@@ -56,13 +60,14 @@ def get_csv():
 
     return csv
 
-# if __name__ == '__main__':
-    
-    # if not isfile('att_data.csv'):
+if __name__ == '__main__':
+    multiprocessing.freeze_support()
+    with open('att_data.csv', 'w') as f:
+        f.write(get_csv())
+    # if not os.path.isfile('att_data.csv'):
     #     with open('att_data.csv', 'w') as f:
     #         f.write(get_csv())        
 
-    # mod_time = getmtime('att_data.csv')
+    # mod_time = os.path.getmtime('att_data.csv')
 
-    # with open('att_data.csv', 'w') as f:
-    #     f.write(get_csv())
+    
