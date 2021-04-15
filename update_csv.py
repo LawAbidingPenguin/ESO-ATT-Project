@@ -1,10 +1,9 @@
 #!/usr/bin/env python3.6
-
-import multiprocessing
 import re
 import os
+import time
+import multiprocessing
 from multiprocessing import Pool
-
 
 guilds = ['Rolling Coins', 'Flipping Coins', 'Shining Coins']
 
@@ -60,14 +59,39 @@ def get_csv():
 
     return csv
 
+
 if __name__ == '__main__':
     multiprocessing.freeze_support()
-    with open('att_data.csv', 'w') as f:
-        f.write(get_csv())
-    # if not os.path.isfile('att_data.csv'):
-    #     with open('att_data.csv', 'w') as f:
-    #         f.write(get_csv())        
 
-    # mod_time = os.path.getmtime('att_data.csv')
+    if not os.path.isfile('att_data.csv'):
+        with open('att_data.csv', 'w') as f:
+            f.write(get_csv())        
 
-    
+    # start file modified time
+    if not os.path.isfile('mod_time.txt'):
+        with open('mod_time.txt', 'w') as f:
+            f.write(f"{os.path.getmtime('ArkadiusTradeToolsSalesData16.lua')}")
+
+    # Checking if modified time of att files has changed
+    i = 0
+    while True:
+
+        new_mt = os.path.getmtime('ArkadiusTradeToolsSalesData16.lua')
+        with open('mod_time.txt', 'r') as f:
+            start_mt = float(f.read())
+
+        time.sleep(2)
+
+        if new_mt != start_mt:
+            time.sleep(4)
+            print(new_mt)
+            print(start_mt)
+            with open('mod_time.txt', 'w') as f:
+                f.write(f"{new_mt}")
+
+            with open('att_data.csv', 'w') as f:
+                f.write(get_csv())
+
+            print(f'#{i} Updated csv...')
+            i += 1
+            #TODO add checks to see if att save files are in use
