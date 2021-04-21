@@ -242,7 +242,7 @@ async def top5(ctx):
     ws = '\u200b' # whitespace
     wi = get_week() # week index
     i = [ weeks[wi][0], weeks[wi][1]] # interval
-
+    # ' '.join([ws]*4) adds  4 whitespaces
 
     if msg.split()[1] == 'traders':
         embed = discord.Embed(title='Top5 highest sellers this trade week', colour=0xFFD700)
@@ -253,14 +253,14 @@ async def top5(ctx):
                     ].groupby('seller_name')['price'].sum()
             t5.sort_values(ascending=False, inplace=True)
 
-            t5_pairs = [f"{t5.index[n]}: {ws} {ws} {ws} {ws} {add_spaces(t5.iloc[n])}" for n in range(5)]
+            t5_pairs = [f"{n+1}) {ws} {t5.index[n]}: {' '.join([ws]*4)} {add_spaces(t5.iloc[n])}" for n in range(5)]
             embed.add_field(name=f'{g}', value=f"{nl.join(t5_pairs)}", inline=False)
 
         # all guild sales
         ags = df[df['timestamp'].between(i[0], i[1])].groupby('seller_name')['price'].sum()
         ags.sort_values(ascending=False, inplace=True)
 
-        ags_pairs = [f'{ags.index[n]}: {ws} {ws} {ws} {ws} {add_spaces(ags.iloc[n])}' for n in range(5)]
+        ags_pairs = [f"{n+1}) {ws} {ags.index[n]}: {' '.join([ws]*4)} {add_spaces(ags.iloc[n])}" for n in range(5)]
 
         embed.add_field(name='All Guilds', value=f"{nl.join(ags_pairs)}",
                                                  inline=False)
@@ -274,7 +274,7 @@ async def top5(ctx):
                     ].groupby('buyer_name')['price'].sum()
             t5.sort_values(ascending=False, inplace=True)
 
-            t5_pairs = [f"{t5.index[n]}: {ws} {ws} {ws} {ws} {add_spaces(t5.iloc[n])}" for n in range(5)]
+            t5_pairs = [f"{n+1}) {ws} {t5.index[n]}: {' '.join([ws]*4)} {add_spaces(t5.iloc[n])}" for n in range(5)]
             embed.add_field(name=f'{g}', value=f"{nl.join(t5_pairs)}", inline=False)
 
         # all guild buys
@@ -282,7 +282,7 @@ async def top5(ctx):
                  (df['internal']==1)].groupby('buyer_name')['price'].sum()
         agb.sort_values(ascending=False, inplace=True)
 
-        agb_pairs = [f'{agb.index[n]}: {ws} {ws} {ws} {ws} {add_spaces(agb.iloc[n])}' for n in range(5)]
+        agb_pairs = [f"{n+1}) {ws} {agb.index[n]}: {' '.join([ws]*4)} {add_spaces(agb.iloc[n])}" for n in range(5)]
         embed.add_field(name='All Guilds', value=f"{nl.join(agb_pairs)}", inline=False)
     else:
         embed = discord.Embed(title=f'No option **{msg.split()[1]}**, please choose **traders** or **buyers**')
@@ -347,7 +347,6 @@ async def summary(ctx):
     total_sales = df[df['timestamp'].between(i[0], i[1])]['price'].sum()
     total_buys = df[(df['timestamp'].between(i[0], i[1])) &
                  (df['internal']==1)]['price'].sum()
-
 
     rc_sales = df[(df['guild_name'] == 'Rolling Coins') & (df['timestamp'].between(i[0], i[1]))]['price'].sum()
     fc_sales = df[(df['guild_name'] == 'Flipping Coins') & (df['timestamp'].between(i[0], i[1]))]['price'].sum()
