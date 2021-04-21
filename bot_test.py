@@ -314,8 +314,8 @@ async def summary(ctx):
                     ].groupby('buyer_name')['price'].sum()
         tb.sort_values(ascending=False, inplace=True)
 
-        tb_pairs = [f"{tb.index[n]}: {ws} {ws} {ws} {ws} {add_spaces(tb.iloc[n])}" for n in range(10)]
-        ts_pairs = [f"{ts.index[n]}: {ws} {ws} {ws} {ws} {add_spaces(ts.iloc[n])}" for n in range(10)]
+        tb_pairs = [f"{n+1}) {ws} {tb.index[n]}: {' '.join([ws]*4)} {add_spaces(tb.iloc[n])}" for n in range(10)]
+        ts_pairs = [f"{n+1}) {ws} {ts.index[n]}: {' '.join([ws]*4)} {add_spaces(ts.iloc[n])}" for n in range(10)]
 
 
         embed.add_field(name=f'{g}\n', value=f"Sales;\n\n"
@@ -328,7 +328,7 @@ async def summary(ctx):
     ags = df[df['timestamp'].between(i[0], i[1])].groupby('seller_name')['price'].sum()
     ags.sort_values(ascending=False, inplace=True)
 
-    ags_pairs = [f'{ags.index[n]}: {ws} {ws} {ws} {ws} {add_spaces(ags.iloc[n])}' for n in range(10)]
+    ags_pairs = [f"{n+1}) {ws} {ags.index[n]}: {' '.join([ws]*4)} {add_spaces(ags.iloc[n])}" for n in range(10)]
 
     embed.add_field(name='All Guilds\n', value="Sales;\n\n"
                                                f"{nl.join(ags_pairs)}\n{ws}")
@@ -338,7 +338,7 @@ async def summary(ctx):
              (df['internal']==1)].groupby('buyer_name')['price'].sum()
     agb.sort_values(ascending=False, inplace=True)
 
-    agb_pairs = [f'{agb.index[n]}: {ws} {ws} {ws} {ws} {add_spaces(agb.iloc[n])}' for n in range(10)]
+    agb_pairs = [f"{n+1}) {ws} {agb.index[n]}: {' '.join([ws]*4)} {add_spaces(agb.iloc[n])}" for n in range(10)]
 
     embed.add_field(name=f'{ws}\n', value="Internal purchases;\n\n"
                                           f"{nl.join(agb_pairs)}")
@@ -361,13 +361,13 @@ async def summary(ctx):
                 & (df['internal']==1)]['price'].sum()
 
     embed.add_field(name='Total', value="Sales;\n\n"
-                                        f"Rolling Coins: {ws} {ws} {ws} {ws} {add_spaces(rc_sales)}\n"
-                                        f"Shining Coins: {ws} {ws} {ws} {ws} {add_spaces(sc_sales)}\n"
-                                        f"Flipping Coins: {ws} {ws} {ws} {ws} {add_spaces(fc_sales)}\n")
+                                        f"Rolling Coins: {' '.join([ws]*4)} {add_spaces(rc_sales)}\n"
+                                        f"Shining Coins: {' '.join([ws]*4)} {add_spaces(sc_sales)}\n"
+                                        f"Flipping Coins: {' '.join([ws]*4)} {add_spaces(fc_sales)}\n")
     embed.add_field(name=f'{ws}\n', value="Internal purchases;\n\n"
-                                          f"Rolling Coins: {ws} {ws} {ws} {ws} {add_spaces(rc_buys)}\n"
-                                          f"Shining Coins: {ws} {ws} {ws} {ws} {add_spaces(sc_buys)}\n"
-                                          f"Flipping Coins: {ws} {ws} {ws} {ws} {add_spaces(fc_buys)}\n")
+                                          f"Rolling Coins: {' '.join([ws]*4)} {add_spaces(rc_buys)}\n"
+                                          f"Shining Coins: {' '.join([ws]*4)} {add_spaces(sc_buys)}\n"
+                                          f"Flipping Coins: {' '.join([ws]*4)} {add_spaces(fc_buys)}\n")
     embed.add_field(name=f'{ws}', value=f'{ws}')
 
     embed.add_field(name=f"{add_spaces(total_sales)}\n", value=f'{ws}')
