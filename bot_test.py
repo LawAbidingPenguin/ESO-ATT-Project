@@ -347,10 +347,32 @@ async def summary(ctx):
     total_sales = df[df['timestamp'].between(i[0], i[1])]['price'].sum()
     total_buys = df[(df['timestamp'].between(i[0], i[1])) &
                  (df['internal']==1)]['price'].sum()
+
+
+    rc_sales = df[(df['guild_name'] == 'Rolling Coins') & (df['timestamp'].between(i[0], i[1]))]['price'].sum()
+    fc_sales = df[(df['guild_name'] == 'Flipping Coins') & (df['timestamp'].between(i[0], i[1]))]['price'].sum()
+    sc_sales = df[(df['guild_name'] == 'Shining Coins') & (df['timestamp'].between(i[0], i[1]))]['price'].sum()
+
+    rc_buys = df[(df['guild_name'] == 'Rolling Coins') & (df['timestamp'].between(i[0], i[1]))
+                & (df['internal']==1)]['price'].sum()
+    fc_buys = df[(df['guild_name'] == 'Flipping Coins') & (df['timestamp'].between(i[0], i[1]))
+                & (df['internal']==1)]['price'].sum()
+    sc_buys = df[(df['guild_name'] == 'Shining Coins') & (df['timestamp'].between(i[0], i[1]))
+                & (df['internal']==1)]['price'].sum()
+
     embed.add_field(name='Total', value="Sales;\n\n"
-                                        f"{add_spaces(total_sales)}\n\n")
-    embed.add_field(name=f'{ws}\n', value='Purchases;\n\n'
-                                          f'{add_spaces(total_buys)}\n\n')
+                                        f"Rolling Coins: {ws} {ws} {ws} {ws} {add_spaces(rc_sales)}\n"
+                                        f"Shining Coins: {ws} {ws} {ws} {ws} {add_spaces(sc_sales)}\n"
+                                        f"Flipping Coins: {ws} {ws} {ws} {ws} {add_spaces(fc_sales)}\n")
+    embed.add_field(name=f'{ws}\n', value="Internal purchases;\n\n"
+                                          f"Rolling Coins: {ws} {ws} {ws} {ws} {add_spaces(rc_buys)}\n"
+                                          f"Shining Coins: {ws} {ws} {ws} {ws} {add_spaces(sc_buys)}\n"
+                                          f"Flipping Coins: {ws} {ws} {ws} {ws} {add_spaces(fc_buys)}\n")
+    embed.add_field(name=f'{ws}', value=f'{ws}')
+
+    embed.add_field(name=f"{add_spaces(total_sales)}\n", value=f'{ws}')
+    embed.add_field(name=f"{add_spaces(total_buys)}\n", value=f'{ws}')
+    embed.add_field(name=f'{ws}', value=f'{ws}')
 
     file_mod_time = datetime.fromtimestamp(os.path.getmtime('att_data.csv'), 
                     timezone.utc).strftime("%H:%M:%S %d-%m-%Y ")
@@ -394,11 +416,11 @@ async def on_command_error(ctx, error):
     if isinstance(error, discord.ext.commands.CommandInvokeError):
         print(error)
         await ctx.send(f'`No info found...`')
-    #TODO add code to write to an error logging file
+    elif isinstance(error, discord.ext.commands.CommandNotFound):
+        await ctx.send(f"Command `{ctx.message.content.split()[0].replace('!', '')}` not found")
 
 
 if __name__ == '__main__':
 
     load_dotenv('.env')
     bot.run(os.getenv('DISCORD_TOKEN'))
-    #TODO testing git
