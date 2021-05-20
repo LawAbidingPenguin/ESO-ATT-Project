@@ -32,6 +32,14 @@ def fix_seller_name(seller):
 
     return (name, seller)
 
+# fixing names to be displayed
+def fix_display_name(name):
+
+    if r'\xc3' in str(name.encode('utf-8')):
+        return eval(f"b'{name}'").decode()
+    else:
+        return name
+
 # Getting current trade week
 def get_week():
     utc_time = datetime.now(timezone.utc)
@@ -72,7 +80,6 @@ def add_spaces(num):
             new_num.insert(i, ',')
 
     return ''.join(new_num)
-
 
 # Setting up the bot
 intents = discord.Intents.default()
@@ -252,6 +259,7 @@ async def top5(ctx):
                     (df['timestamp'].between(i[0], i[1]))
                     ].groupby('seller_name')['price'].sum()
             t5.sort_values(ascending=False, inplace=True)
+            t5.index = [fix_display_name(name) for name in t5.index]
 
             t5_pairs = [f"{n+1}) {ws} {t5.index[n]}: {' '.join([ws]*4)} {add_spaces(t5.iloc[n])}" for n in range(5)]
             embed.add_field(name=f'{g}', value=f"{nl.join(t5_pairs)}", inline=False)
@@ -259,6 +267,7 @@ async def top5(ctx):
         # all guild sales
         ags = df[df['timestamp'].between(i[0], i[1])].groupby('seller_name')['price'].sum()
         ags.sort_values(ascending=False, inplace=True)
+        ags.index = [fix_display_name(name) for name in ags.index]
 
         ags_pairs = [f"{n+1}) {ws} {ags.index[n]}: {' '.join([ws]*4)} {add_spaces(ags.iloc[n])}" for n in range(5)]
 
@@ -273,6 +282,7 @@ async def top5(ctx):
                     (df['internal']==1)
                     ].groupby('buyer_name')['price'].sum()
             t5.sort_values(ascending=False, inplace=True)
+            t5.index = [fix_display_name(name) for name in t5.index]
 
             t5_pairs = [f"{n+1}) {ws} {t5.index[n]}: {' '.join([ws]*4)} {add_spaces(t5.iloc[n])}" for n in range(5)]
             embed.add_field(name=f'{g}', value=f"{nl.join(t5_pairs)}", inline=False)
@@ -281,6 +291,7 @@ async def top5(ctx):
         agb = df[(df['timestamp'].between(i[0], i[1])) &
                  (df['internal']==1)].groupby('buyer_name')['price'].sum()
         agb.sort_values(ascending=False, inplace=True)
+        agb.index = [fix_display_name(name) for name in agb.index]
 
         agb_pairs = [f"{n+1}) {ws} {agb.index[n]}: {' '.join([ws]*4)} {add_spaces(agb.iloc[n])}" for n in range(5)]
         embed.add_field(name='All Guilds', value=f"{nl.join(agb_pairs)}", inline=False)
@@ -291,7 +302,6 @@ async def top5(ctx):
 
 @bot.command()
 async def summary(ctx):
-    #TODO add total sales for each guild
 
     nl = '\n' # newline to be used in f-string
     wi = get_week()
@@ -307,16 +317,18 @@ async def summary(ctx):
                 (df['timestamp'].between(i[0], i[1]))
                 ].groupby('seller_name')['price'].sum()
         ts.sort_values(ascending=False, inplace=True)
+        ts.index = [fix_display_name(i) for i in ts.index]
+
         # tb - top buyers
         tb = df[(df['guild_name']==g) & 
                     (df['timestamp'].between(i[0], i[1])) &
                     (df['internal']==1)
                     ].groupby('buyer_name')['price'].sum()
         tb.sort_values(ascending=False, inplace=True)
+        tb.index = [fix_display_name(name) for name in tb.index]
 
         tb_pairs = [f"{n+1}) {ws} {tb.index[n]}: {' '.join([ws]*4)} {add_spaces(tb.iloc[n])}" for n in range(10)]
         ts_pairs = [f"{n+1}) {ws} {ts.index[n]}: {' '.join([ws]*4)} {add_spaces(ts.iloc[n])}" for n in range(10)]
-
 
         embed.add_field(name=f'{g}\n', value=f"Sales;\n\n"
                                              f"{nl.join(ts_pairs)}\n{ws}")
@@ -324,9 +336,11 @@ async def summary(ctx):
                                               f"{nl.join(tb_pairs)}\n{ws}")
         embed.add_field(name=f'{ws}', value=f'{ws}')
 
+
     # all guild sales
     ags = df[df['timestamp'].between(i[0], i[1])].groupby('seller_name')['price'].sum()
     ags.sort_values(ascending=False, inplace=True)
+    ags.index = [fix_display_name(name) for name in ags.index]
 
     ags_pairs = [f"{n+1}) {ws} {ags.index[n]}: {' '.join([ws]*4)} {add_spaces(ags.iloc[n])}" for n in range(10)]
 
@@ -337,6 +351,7 @@ async def summary(ctx):
     agb = df[(df['timestamp'].between(i[0], i[1])) &
              (df['internal']==1)].groupby('buyer_name')['price'].sum()
     agb.sort_values(ascending=False, inplace=True)
+    agb.index = [fix_display_name(name) for name in agb.index]
 
     agb_pairs = [f"{n+1}) {ws} {agb.index[n]}: {' '.join([ws]*4)} {add_spaces(agb.iloc[n])}" for n in range(10)]
 
@@ -413,8 +428,8 @@ async def guildadmirer(ctx):
 async def on_command_error(ctx, error):
 
     if isinstance(error, discord.ext.commands.CommandInvokeError):
+        # await ctx.send(f'`Member {ctx.message.content.split()[1]} not found`')
         print(error)
-        await ctx.send(f'`No info found...`')
     elif isinstance(error, discord.ext.commands.CommandNotFound):
         await ctx.send(f"Command `{ctx.message.content.split()[0].replace('!', '')}` not found")
 
