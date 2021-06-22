@@ -40,7 +40,7 @@ def clean_data(att):
     for row in data:
         row.pop(1)
         row.sort()
-        for x in range(0, len(row)-1):
+        for x in range(0, len(row)-1):            
             row[x] = row[x].split('=')[1].split(',')[0].strip()
             row[x] = row[x].strip('\"')
 
@@ -54,7 +54,7 @@ def clean_data(att):
     return data
     
 def get_csv():
-    csv_list = Pool().map(clean_data, att_list)
+    csv_list = Pool(16).map(clean_data, att_list)
     csv = columns + '\n' + '\n'.join(csv_list)
 
     return csv
@@ -62,6 +62,9 @@ def get_csv():
 
 if __name__ == '__main__':
     multiprocessing.freeze_support()
+
+    # with open('att_data.csv', 'w') as f:
+    #     f.write(get_csv())
 
     if not os.path.isfile('att_data.csv'):
         with open('att_data.csv', 'w') as f:
@@ -73,19 +76,17 @@ if __name__ == '__main__':
             f.write(f"{os.path.getmtime('ArkadiusTradeToolsSalesData16.lua')}")
 
     # Checking if modified time of att files has changed
-    i = 0
+    i = 1
     while True:
 
         new_mt = os.path.getmtime('ArkadiusTradeToolsSalesData16.lua')
         with open('mod_time.txt', 'r') as f:
             start_mt = float(f.read())
 
-        time.sleep(2)
+        if new_mt - start_mt > 5:
 
-        if new_mt != start_mt:
-            time.sleep(4)
-            print(new_mt)
-            print(start_mt)
+            time.sleep(5)
+
             with open('mod_time.txt', 'w') as f:
                 f.write(f"{new_mt}")
 
@@ -94,4 +95,3 @@ if __name__ == '__main__':
 
             print(f'#{i} Updated csv...')
             i += 1
-            #TODO add checks to see if att save files are in use
