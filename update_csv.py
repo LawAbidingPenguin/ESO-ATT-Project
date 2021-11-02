@@ -83,7 +83,7 @@ if __name__ == '__main__':
         with open('mod_time.txt', 'r') as f:
             start_mt = float(f.read())
 
-        if new_mt - start_mt > 5:
+        if abs(new_mt - start_mt) > 5:
 
             time.sleep(5)
 
